@@ -1,0 +1,97 @@
+<html>
+  <head>
+
+  </head>
+  <body>
+    <h1>Basic OAuth example using implicit flow</h1>
+
+    <script>
+
+      // This is an example of a SPA (Single Page App) with OAuth authentication
+      //
+      // For simplicity, we are using the "Implicit" flow, which means the 
+      // access_token is part of the URL being sent to the application
+      //
+
+      // - Step 1 -
+      // if page doesn't include access token, we need to authroize
+      //
+      if (!document.location.href.includes('access_token')) {
+	  //
+	  // Many apps would display a "Login" button to alert users that
+	  // they need to login.  I'm simply redirecting to the facebook login
+	  // page.
+	  //
+	  // IMPORTANT: You will need to register as the application developer
+	  //            on facebook and create an APP, which will provide
+	  //            you with a unique client_id.  
+	  //
+	  //            Visit https://developers.facebook.com to create
+	  //            your client_id (call the APP ID in the facebook console)
+	  
+	  
+	  // This will redirect the page to facebook.  Pay special attention to the query
+	  // parameters, we are asking for a token to be sent back to the redirect_uri
+	  let client_id = '2025761017499969';
+	  document.location.href= [`https://www.facebook.com/v3.2/dialog/oauth?client_id=${client_id}`,
+				   `redirect_uri=${document.location.href}`,
+				   `response_type=token`,
+				   `scope=email,public_profile`].join('&') ;
+	  
+      } 
+
+      // - Step 2 -
+      // If we are here, we have an access token (the test from Step 1 is positive).
+      console.log('Got a token!!');
+
+      // we could store the token in a cookie or local storage, or just in a variable
+      // here we simply parsed it out from the url using regex
+      var matches = document.location.href.match(/(.*)\#access_token\=(.*?)\&/);
+      var app_url = matches[1];
+      var token = matches[2];
+
+      // - Step 3 -
+      // Now that we have a token, we can make API calls to facebook.
+      // Here we simply retrieve the user's name, email, and profile pic
+      // to confirm the user's identity
+      fetch('https://graph.facebook.com/v3.2/me?fields=name,email,picture', {
+	  // IMPORTANT:  You must include the token in the Authroization header
+	  //             Otherwise how can facebook know who is calling?
+	  headers:{
+	      "Authorization": `Bearer ${token}`
+	  }
+      }).then(function(response) {
+	  // Extra error check, if we get an invalid response, it means that
+	  // our token is invalid.  We will restart the login flow by
+	  // clearing the access_token
+	  console.log(response);
+	  if (response.status != 200) {
+	      document.location.href = app_url;
+	      token = null;
+	  }
+	  return response.json();
+      }).then(function(myJson) {
+	  // - Step 4 -
+	  // Our facebook API call is successful, this means
+	  // our token is valid and we have the user's name, email and pic
+	  //
+	  // At this point, it's up to your application to decide what to do
+	  // with the information.  I'm simply going to display it to
+	  // the console and also to the HTML
+	  console.log(myJson);
+
+
+	  // Pure javascript to insert a couple of components to the page
+	  let userinfo = document.createElement('h2');
+	  userinfo.innerText = `Hello ${myJson.name}`;
+	  document.body.append(userinfo);
+
+	  let userpic = document.createElement('img');
+	  userpic.src = myJson.picture.data.url;
+	  document.body.append(userpic);
+      });
+      
+      
+    </script>
+  </body>
+</html>
