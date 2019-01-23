@@ -17,8 +17,8 @@ new app, then make sure you set the following parameters in the developer consol
 
 ## Under "Basic" 
 
-![Basic Settings](basic_settings.png)
+![Basic Settings](basic-settings.png)
 
 ## Under "Facebook Login"
 
-![Login Settings](login_settings.png)
+![Login Settings](login-settings.png)
