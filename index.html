@@ -54,7 +54,7 @@
       // Now that we have a token, we can make API calls to facebook.
       // Here we simply retrieve the user's name, email, and profile pic
       // to confirm the user's identity
-      fetch('https://graph.facebook.com/v12.0/me?fields=name,email,picture', {
+      fetch('https://graph.facebook.com/v15.0/me?fields=name,email,picture', {
 	  // IMPORTANT:  You must include the token in the Authroization header
 	  //             Otherwise how can facebook know who is calling?
 	  headers:{
