@@ -4,6 +4,8 @@ The index.html file is well commented, so you should be able to get all the
 informaiton from there.  We will be following the "Implicit" flow, which
 means only one round-trip to the facebook server.
 
+You can host this index.html file under and web server as a static file.
+
 This is implemented without the use of SDK, and follows the steps at
 [https://developers.facebook.com/docs/facebook-login/manually-build-a-login-flow/](https://developers.facebook.com/docs/facebook-login/manually-build-a-login-flow/)
 
