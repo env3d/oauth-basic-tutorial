@@ -49,11 +49,6 @@ the user's email.
 
 ![Settings](settings.png)
 
-# OAuth Settings
-
-If you want to deploy this example to your own site, you'll need to create your own
-facebook app.  This is because each app only allow a restricted set of redirect_uri.
-
 # Redirect URI
 
 The most important field is the "redirect_uri", which is your app's URL.  This will
