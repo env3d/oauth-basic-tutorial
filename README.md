@@ -54,13 +54,14 @@ the user's email.
 If you want to deploy this example to your own site, you'll need to create your own
 facebook app.  This is because each app only allow a restricted set of redirect_uri.
 
-
 # Redirect URI
 
 The most important field is the "redirect_uri", which is your app's URL.  This will
 allow users to go back to your app after logging in via Facebook.
 
-Click on the "save" button.
+Click on the "save changes" button.
+
+![Redirect URI](redirect-uri.png)
 
 # App settings
 
