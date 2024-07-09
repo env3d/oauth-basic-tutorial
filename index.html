@@ -62,24 +62,31 @@
 	  
 	  
 	  // This will redirect the page to facebook.
+
+	  let redirect_url = `https://www.facebook.com/v20.0/dialog/oauth`;
+	  let params = [`client_id=${client_id}`,
+			`redirect_uri=${document.location.href}`,
+			`response_type=code`,
+			`code_challenge_method=plain`,
+			`code_challenge=${window.sessionStorage.code_verifier}`,
+			`scope=openid email public_profile`].join('&') ;
 	  
-	  document.location.href= [`https://www.facebook.com/v20.0/dialog/oauth?client_id=${client_id}`,
-				   `redirect_uri=${document.location.href}`,
-				   `response_type=code`,
-				   `code_challenge_method=plain`,
-				   `code_challenge=${window.sessionStorage.code_verifier}`,
-				   `scope=openid email public_profile`].join('&') ;	  
+	  document.location.href = `${redirect_url}?${params}`;
       }
 
-      async function get_token(code) {	  
+      async function get_token() {	  
 	  // Now that we code a code, exchange for token	 
-	  
-	  let res = await fetch([
-	      `https://graph.facebook.com/v20.0/oauth/access_token?client_id=${client_id}`,
+	  let code = new URLSearchParams(window.location.search.substr(1)).get('code');
+
+	  let token_url = `https://graph.facebook.com/v20.0/oauth/access_token`;
+	  let params = [
+	      `client_id=${client_id}`,
 	      `redirect_uri=${document.location.href.substr(0,document.location.href.indexOf('?'))}`,
 	      `code=${code}`,
 	      `code_verifier=${window.sessionStorage.code_verifier}`
-	  ].join('&'));
+	  ].join('&');
+      
+	  let res = await fetch(`${token_url}?${params}`);
 
 	  let json = await res.json();	  
 
@@ -97,8 +104,8 @@
 	      // - Step 2 -
 	      // If we are here, we have a code, exchange for token
 	      console.log('Got a code!!');
-	      let code = new URLSearchParams(window.location.search.substr(1)).get('code');
-	      token = await get_token(code)
+	      
+	      token = await get_token()
 	      
 	      // - Step 3 -
 	      // Now that we have a token, we can make API calls to facebook.
