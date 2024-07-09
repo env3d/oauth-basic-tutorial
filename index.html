@@ -8,47 +8,15 @@
     <script>
       // This is an example of a SPA (Single Page App) with OAuth authentication
       //
-      // We are using the code flow with pkce using plain code verifier, which is
-      // the most simple version of the authorization code flow
-      //
-      // More details can be found at
-      //
-      // https://developers.facebook.com/docs/facebook-login/guides/advanced/oidc-token
-      
-
-      // First, some support functions
-
-      // This function simply generates a random string
-      function generateRandomString(length) {
-	  var text = "";
-	  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-	  
-	  for (var i = 0; i < length; i++) {
-	      text += possible.charAt(Math.floor(Math.random() * possible.length));
-	  }
-
-	  return text;
-      }
-
-      // This is left here for optional S256 version of the code verifier
-      // Not used at the moment
-      async function generateCodeChallenge(codeVerifier) {
-	  var digest = await crypto.subtle.digest("SHA-256",
-						  new TextEncoder().encode(codeVerifier));
-
-	  return btoa(String.fromCharCode(...new Uint8Array(digest)))
-	      .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
-      }      
+      // We are using the implicit flow to keep it simple, while the implicit flow
+      // is technically deprecated, many identity providers (i.e. google) are
+      // still recommending it for web applications.
+      // For a version using auth code flow with pkce, look at the pkce branch
 
       // Need client_id to be global
       let client_id = '467933425294328';
 
-      function login_redirect() {
-	  // Generate a random code verifier and store it in sessionStorage
-	  var codeVerifier = generateRandomString(64);
-	  window.sessionStorage.setItem("code_verifier", codeVerifier);
-	  
-	  //
+      function login_redirect() {	  
 	  // Many apps would display a "Login" button to alert users that
 	  // they need to login.  I'm simply redirecting to the facebook login
 	  // page.
@@ -66,47 +34,33 @@
 	  let redirect_url = `https://www.facebook.com/v20.0/dialog/oauth`;
 	  let params = [`client_id=${client_id}`,
 			`redirect_uri=${document.location.href}`,
-			`response_type=code`,
-			`code_challenge_method=plain`,
-			`code_challenge=${window.sessionStorage.code_verifier}`,
+			`response_type=token`,
 			`scope=openid email public_profile`].join('&') ;
 	  
 	  document.location.href = `${redirect_url}?${params}`;
       }
 
-      async function get_token() {	  
+      function get_token() {	  
 	  // Now that we code a code, exchange for token	 
-	  let code = new URLSearchParams(window.location.search.substr(1)).get('code');
-
-	  let token_url = `https://graph.facebook.com/v20.0/oauth/access_token`;
-	  let params = [
-	      `client_id=${client_id}`,
-	      `redirect_uri=${document.location.href.substr(0,document.location.href.indexOf('?'))}`,
-	      `code=${code}`,
-	      `code_verifier=${window.sessionStorage.code_verifier}`
-	  ].join('&');
-      
-	  let res = await fetch(`${token_url}?${params}`);
-
-	  let json = await res.json();	  
-
-	  console.log(json);
-	  return json['access_token'];
+	  let token = new URLSearchParams(
+	      document.location.href.substr(document.location.href.indexOf('#')+1)
+	  ).get('access_token');
+	  return token;
       }
       
       async function load() {
 	  
 	  // - Step 1 -
 	  // We need to login via facebook if we don't have a code
-	  if (!document.location.href.includes('code')) {
+	  if (!document.location.href.includes('access_token')) {
 	      login_redirect()	      
 	  } else {
 	      // - Step 2 -
 	      // If we are here, we have a code, exchange for token
-	      console.log('Got a code!!');
+	      console.log('Got a token!!');
 	      
-	      token = await get_token()
-	      
+	      let token = await get_token()
+
 	      // - Step 3 -
 	      // Now that we have a token, we can make API calls to facebook.
 	      // Here we simply retrieve the user's name, email, and profile pic
@@ -138,6 +92,7 @@
 	      let userpic = document.createElement('img');
 	      userpic.src = myJson.picture.data.url;
 	      document.body.append(userpic);
+
 	  }
       }
     </script>
