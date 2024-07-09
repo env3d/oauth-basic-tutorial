@@ -3,7 +3,7 @@
 
   </head>
   <body onload=load()>
-    <h1>Basic OAuth example using plain code flow</h1>
+    <h1>Basic OAuth example using implicit flow</h1>
 
     <script>
       // This is an example of a SPA (Single Page App) with OAuth authentication
@@ -47,6 +47,30 @@
 	  ).get('access_token');
 	  return token;
       }
+
+      async function api_call(token) {
+	  let api_result = await fetch('https://graph.facebook.com/v20.0/me?fields=name,email,picture', {
+	      // IMPORTANT:  You must include the token in the Authroization header
+	      //             Otherwise how can facebook know who is calling?
+	      headers:{
+		  "Authorization": `Bearer ${token}`
+	      }
+	  })
+
+	  return await api_result.json()	  
+      }
+
+
+      function render_page(myJson) {
+	  // Pure javascript to insert a couple of components to the page
+	  let userinfo = document.createElement('h2');
+	  userinfo.innerText = `Hello ${myJson.name}`;
+	  document.body.append(userinfo);
+	  
+	  let userpic = document.createElement('img');
+	  userpic.src = myJson.picture.data.url;
+	  document.body.append(userpic);	  
+      }
       
       async function load() {
 	  
@@ -54,46 +78,27 @@
 	  // We need to login via facebook if we don't have a code
 	  if (!document.location.href.includes('access_token')) {
 	      login_redirect()	      
-	  } else {
-	      // - Step 2 -
-	      // If we are here, we have a code, exchange for token
-	      console.log('Got a token!!');
-	      
-	      let token = await get_token()
-
-	      // - Step 3 -
-	      // Now that we have a token, we can make API calls to facebook.
-	      // Here we simply retrieve the user's name, email, and profile pic
-	      // to confirm the user's identity
-	      let api_result = await fetch('https://graph.facebook.com/v20.0/me?fields=name,email,picture', {
-		  // IMPORTANT:  You must include the token in the Authroization header
-		  //             Otherwise how can facebook know who is calling?
-		  headers:{
-		      "Authorization": `Bearer ${token}`
-		  }
-	      })
-
-	      let myJson = await api_result.json()
-
-	      // - Step 4 -
-	      // Our facebook API call is successful, this means
-	      // our token is valid and we have the user's name, email and pic
-	      //
-	      // At this point, it's up to your application to decide what to do
-	      // with the information.  I'm simply going to display it to
-	      // the console and also to the HTML
-	      console.log(myJson);
-	      
-	      // Pure javascript to insert a couple of components to the page
-	      let userinfo = document.createElement('h2');
-	      userinfo.innerText = `Hello ${myJson.name}`;
-	      document.body.append(userinfo);
-	      
-	      let userpic = document.createElement('img');
-	      userpic.src = myJson.picture.data.url;
-	      document.body.append(userpic);
-
 	  }
+
+	  // - Step 2 -
+	  // If we are here, we have a code, exchange for token	  
+	  let token = get_token()
+
+	  // - Step 3 -
+	  // Now that we have a token, we can make API calls to facebook.
+	  // Here we simply retrieve the user's name, email, and profile pic
+	  // to confirm the user's identity
+	  let json = await api_call(token);
+	  
+	  // - Step 4 -
+	  // Our facebook API call is successful, this means
+	  // our token is valid and we have the user's name, email and pic
+	  //
+	  // At this point, it's up to your application to decide what to do
+	  // with the information.  I'm simply going to display it to
+	  // the console and also to the HTML
+	  render_page(json);
+	  
       }
     </script>
   </body>
