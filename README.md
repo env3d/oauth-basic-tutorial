@@ -1,8 +1,11 @@
 # Very basic oauth tutorial
 
+You can see this app in action at https://env3d.github.io/oauth-basic-tutorial
+
 The index.html file is well commented, so you should be able to get all the
-informaiton from there.  We will be following the "Implicit" flow, which
-means only one round-trip to the facebook server.
+informaiton from there.  We will be following the authorization code flow, which
+is the standard flow for OAuth.  We will also be using pkce as the standard technology
+for single page app (https://www.oauth.com/oauth2-servers/single-page-apps/)
 
 You can host this index.html file under and web server as a static file.
 
