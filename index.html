@@ -1,137 +1,108 @@
 <html>
-  <head>
 
-  </head>
-  <body onload=load()>
-    <h1>Basic OAuth example using auth code flow with pkce</h1>
+<head>
 
-    <script>
-      // This is an example of a SPA (Single Page App) with OAuth authentication
-      //
-      // We are using the most simple auth code flow with plain pkce
-      // WARNING: This app is meant for demonstration purposes and not
-      // for production use! 
+</head>
+
+<body onload=load()>
+	<h1>Basic OAuth example using implicit flow</h1>
+
+	<script>
+		// This is an example of a SPA (Single Page App) with OAuth authentication
+		//
+		// We are using the implicit flow to keep it simple, while the implicit flow
+		// is technically deprecated, many identity providers (i.e. google) are
+		// still recommending it for web applications.
+		// For a version using auth code flow with pkce, look at the pkce branch
+
+		// Need client_id to be global
+		let client_id = '467933425294328';
+
+		function login_redirect() {
+			// Many apps would display a "Login" button to alert users that
+			// they need to login.  I'm simply redirecting to the facebook login
+			// page.
+			//
+			// IMPORTANT: You will need to register as the application developer
+			//            on facebook and create an APP, which will provide
+			//            you with a unique client_id.  
+			//
+			//            Visit https://developers.facebook.com to create
+			//            your client_id (call the APP ID in the facebook console)
 
 
-      // First need a utility function
-      // This function simply generates a random string
-      function generateRandomString(length) {
-	  var text = "";
-	  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-	  
-	  for (var i = 0; i < length; i++) {
-	      text += possible.charAt(Math.floor(Math.random() * possible.length));
-	  }
+			// This will redirect the page to facebook.
 
-	  return text;
-      }      
-      
-      // Need client_id to be global
-      let client_id = '467933425294328';
-
-      function login_redirect() {	  
-	  // Many apps would display a "Login" button to alert users that
-	  // they need to login.  I'm simply redirecting to the facebook login
-	  // page.
-	  //
-	  // IMPORTANT: You will need to register as the application developer
-	  //            on facebook and create an APP, which will provide
-	  //            you with a unique client_id.  
-	  //
-	  //            Visit https://developers.facebook.com to create
-	  //            your client_id (call the APP ID in the facebook console)
-	  
-
-	  // create a store a random code_verifier
-	  if (! window.sessionStorage.code_verifier) {
-	      window.sessionStorage.code_verifier = generateRandomString(60);
-	  }
-	  
-	  // This will redirect the page to facebook.
-	  let redirect_url = `https://www.facebook.com/v20.0/dialog/oauth`;
-	  let params = [`client_id=${client_id}`,
+			let redirect_url = `https://www.facebook.com/v20.0/dialog/oauth`;
+			let params = [`client_id=${client_id}`,
 			`redirect_uri=${document.location.href}`,
-			`response_type=code`,
-			`code_challenge_method=plain`,
-			`code_challenge=${window.sessionStorage.code_verifier}`,
-			`scope=openid email public_profile`].join('&') ;
-	  
-	  document.location.href = `${redirect_url}?${params}`;
-      }
+				`response_type=token`,
+				`scope=openid email public_profile`].join('&');
 
-      async function get_token() {	  
-	  // Now that we code a code, exchange for token
-	  let code = new URLSearchParams(window.location.search.substr(1)).get('code');
-	  if (code) {
-	      let token_url = `https://graph.facebook.com/v20.0/oauth/access_token`;
-	      let params = [
-		  `client_id=${client_id}`,
-		  `redirect_uri=${document.location.href.substr(0,document.location.href.indexOf('?'))}`,
-		  `code=${code}`,
-		  `code_verifier=${window.sessionStorage.code_verifier}`
-	      ].join('&');
-	      
-	      let res = await fetch(`${token_url}?${params}`);
-	      let json = await res.json();	  
+			document.location.href = `${redirect_url}?${params}`;
+		}
 
-	      console.log(json)
-	      return json['access_token'];
-	  }
-      }
+		function get_token() {
+			// Now that we code a code, exchange for token	 
+			let token = new URLSearchParams(
+				document.location.href.substr(document.location.href.indexOf('#') + 1)
+			).get('access_token');
+			return token;
+		}
 
-      async function api_call(token) {
-	  let api_result = await fetch('https://graph.facebook.com/v20.0/me?fields=name,email,picture', {
-	      // IMPORTANT:  You must include the token in the Authroization header
-	      //             Otherwise how can facebook know who is calling?
-	      headers:{
-		  "Authorization": `Bearer ${token}`
-	      }
-	  })
+		async function api_call(token) {
+			let api_result = await fetch('https://graph.facebook.com/v20.0/me?fields=name,email,picture', {
+				// IMPORTANT:  You must include the token in the Authroization header
+				//             Otherwise how can facebook know who is calling?
+				headers: {
+					"Authorization": `Bearer ${token}`
+				}
+			})
 
-	  return await api_result.json()	  
-      }
+			return await api_result.json()
+		}
 
 
-      function render_page(myJson) {
-	  // Pure javascript to insert a couple of components to the page
-	  let userinfo = document.createElement('h2');
-	  userinfo.innerText = `Hello ${myJson.name}`;
-	  document.body.append(userinfo);
-	  
-	  let userpic = document.createElement('img');
-	  userpic.src = myJson.picture.data.url;
-	  document.body.append(userpic);	  
-      }
-      
-      async function load() {
-	  
-	  // - Step 1 -
-	  // We need to login via facebook if we don't have a code
-	  if (!document.location.href.includes('code')) {
-	      login_redirect()	      
-	  } else {
+		function render_page(myJson) {
+			// Pure javascript to insert a couple of components to the page
+			let userinfo = document.createElement('h2');
+			userinfo.innerText = `Hello ${myJson.name}`;
+			document.body.append(userinfo);
 
-	      // - Step 2 -
-	      // If we are here, we have a code, exchange for token	  
-	      let token = await get_token()
+			let userpic = document.createElement('img');
+			userpic.src = myJson.picture.data.url;
+			document.body.append(userpic);
+		}
 
-	      // - Step 3 -
-	      // Now that we have a token, we can make API calls to facebook.
-	      // Here we simply retrieve the user's name, email, and profile pic
-	      // to confirm the user's identity
-	      let json = await api_call(token);
-	      
-	      // - Step 4 -
-	      // Our facebook API call is successful, this means
-	      // our token is valid and we have the user's name, email and pic
-	      //
-	      // At this point, it's up to your application to decide what to do
-	      // with the information.  I'm simply going to display it to
-	      // the console and also to the HTML
-	      render_page(json);
-	  }
-	  
-      }
-    </script>
-  </body>
+		async function load() {
+
+			// - Step 1 -
+			// We need to login via facebook if we don't have a code
+			if (!document.location.href.includes('access_token')) {
+				login_redirect()
+			}
+
+			// - Step 2 -
+			// If we are here, we can get a token from the URL fragment
+			let token = get_token()
+
+			// - Step 3 -
+			// Now that we have a token, we can make API calls to facebook.
+			// Here we simply retrieve the user's name, email, and profile pic
+			// to confirm the user's identity
+			let json = await api_call(token);
+
+			// - Step 4 -
+			// Our facebook API call is successful, this means
+			// our token is valid and we have the user's name, email and pic
+			//
+			// At this point, it's up to your application to decide what to do
+			// with the information.  I'm simply going to display it to
+			// the console and also to the HTML
+			render_page(json);
+
+		}
+	</script>
+</body>
+
 </html>
